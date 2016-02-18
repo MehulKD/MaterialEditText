@@ -47,6 +47,25 @@
           app:met_singleLineEllipsis="true"/>
 
 
+      <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:hint="hint"
+          app:met_textColorHint="#b3ffffff"
+          android:text="MaterialEditText"
+          android:textCursorDrawable="@drawable/text_cursor_cyan"
+          android:textSize="34sp"
+          android:textColorHint="#b3ffffff"
+          app:met_baseColor="@android:color/white"
+          app:met_floatingLabel="highlight"
+          app:met_floatingLabelTextColor="#b3ffffff"
+          app:met_underlineColor="#b3ffffff"
+          app:met_maxCharacters="20"
+          app:met_clearButton="true"
+          app:met_primaryColor="#fff"
+          app:met_singleLineEllipsis="true"/>
+
+
 
 
     </LinearLayout>
