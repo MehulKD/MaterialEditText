@@ -1422,8 +1422,8 @@ public class MaterialAutoCompleteTextView extends AppCompatAutoCompleteTextView 
             // calculate the alpha
             int alpha =
                 ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * (0.3f * focusFraction * (
-                    isEnabled() ? 1 : 0) + 0.7f) * (floatingLabelTextColor != -1 ? Color.alpha(floatingLabelTextColor)
-                    / 256f : 1)));
+                    isEnabled() ? 1 : 0) + 0.7f) * (floatingLabelTextColor != -1 ? 1
+                    : Color.alpha(floatingLabelTextColor) / 256f)));
             textPaint.setAlpha(alpha);
 
             // draw the floating label
