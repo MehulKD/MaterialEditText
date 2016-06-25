@@ -31,12 +31,10 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-
 import com.nineoldandroids.animation.ArgbEvaluator;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.rengwuxian.materialedittext.validation.METLengthChecker;
 import com.rengwuxian.materialedittext.validation.METValidator;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -290,6 +288,11 @@ public class MaterialEditText extends AppCompatEditText {
     private Bitmap[] iconRightBitmaps;
 
     /**
+     * Inner Right Icon
+     */
+    private Bitmap[] iconInnerRightBitmaps;
+
+    /**
      * Clear Button
      */
     private Bitmap[] clearButtonBitmaps;
@@ -307,6 +310,7 @@ public class MaterialEditText extends AppCompatEditText {
     private int iconPadding;
     private boolean clearButtonTouched;
     private boolean clearButtonClicking;
+    private boolean iconInnerRightClicking;
     private ColorStateList textColorStateList;
     private ColorStateList textColorHintStateList;
     private ArgbEvaluator focusEvaluator = new ArgbEvaluator();
@@ -369,8 +373,7 @@ public class MaterialEditText extends AppCompatEditText {
             }
         } catch (Exception e) {
             try {
-                int colorPrimaryId =
-                    getResources().getIdentifier("colorPrimary", "attr", getContext().getPackageName());
+                int colorPrimaryId = getResources().getIdentifier("colorPrimary", "attr", getContext().getPackageName());
                 if (colorPrimaryId != 0) {
                     context.getTheme().resolveAttribute(colorPrimaryId, primaryColorTypedValue, true);
                     defaultPrimaryColor = primaryColorTypedValue.data;
@@ -417,13 +420,15 @@ public class MaterialEditText extends AppCompatEditText {
         underlineColor = typedArray.getColor(R.styleable.MaterialEditText_met_underlineColor, -1);
         autoValidate = typedArray.getBoolean(R.styleable.MaterialEditText_met_autoValidate, false);
         iconLeftBitmaps = generateIconBitmaps(typedArray.getResourceId(R.styleable.MaterialEditText_met_iconLeft, -1));
-        iconRightBitmaps =
-            generateIconBitmaps(typedArray.getResourceId(R.styleable.MaterialEditText_met_iconRight, -1));
+        iconRightBitmaps = generateIconBitmaps(typedArray.getResourceId(R.styleable.MaterialEditText_met_iconRight, -1));
         showClearButton = typedArray.getBoolean(R.styleable.MaterialEditText_met_clearButton, false);
+
+        iconInnerRightBitmaps =
+            generateIconBitmaps(typedArray.getResourceId(R.styleable.MaterialEditText_met_innerIconRight, -1));
+
         clearButtonBitmaps = generateIconBitmaps(R.drawable.met_ic_clear);
         iconPadding = typedArray.getDimensionPixelSize(R.styleable.MaterialEditText_met_iconPadding, getPixel(16));
-        floatingLabelAlwaysShown =
-            typedArray.getBoolean(R.styleable.MaterialEditText_met_floatingLabelAlwaysShown, false);
+        floatingLabelAlwaysShown = typedArray.getBoolean(R.styleable.MaterialEditText_met_floatingLabelAlwaysShown, false);
         helperTextAlwaysShown = typedArray.getBoolean(R.styleable.MaterialEditText_met_helperTextAlwaysShown, false);
         validateOnFocusLost = typedArray.getBoolean(R.styleable.MaterialEditText_met_validateOnFocusLost, false);
         checkCharactersCountAtBeginning =
@@ -535,6 +540,21 @@ public class MaterialEditText extends AppCompatEditText {
         initPadding();
     }
 
+    public void setInnerIconRight(@DrawableRes int res) {
+        iconInnerRightBitmaps = generateIconBitmaps(res);
+        initPadding();
+    }
+
+    public void setInnerIconRight(Drawable drawable) {
+        iconInnerRightBitmaps = generateIconBitmaps(drawable);
+        initPadding();
+    }
+
+    public void setInnerIconRight(Bitmap bitmap) {
+        iconInnerRightBitmaps = generateIconBitmaps(bitmap);
+        initPadding();
+    }
+
     public boolean isShowClearButton() {
         return showClearButton;
     }
@@ -559,8 +579,7 @@ public class MaterialEditText extends AppCompatEditText {
 
     private Bitmap[] generateIconBitmaps(Drawable drawable) {
         if (drawable == null) return null;
-        Bitmap bitmap =
-            Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
@@ -575,15 +594,13 @@ public class MaterialEditText extends AppCompatEditText {
         origin = scaleIcon(origin);
         iconBitmaps[0] = origin.copy(Bitmap.Config.ARGB_8888, true);
         Canvas canvas = new Canvas(iconBitmaps[0]);
-        canvas.drawColor(baseColor & 0x00ffffff | (Colors.isLight(baseColor) ? 0xff000000 : 0x8a000000),
-            PorterDuff.Mode.SRC_IN);
+        canvas.drawColor(baseColor & 0x00ffffff | (Colors.isLight(baseColor) ? 0xff000000 : 0x8a000000), PorterDuff.Mode.SRC_IN);
         iconBitmaps[1] = origin.copy(Bitmap.Config.ARGB_8888, true);
         canvas = new Canvas(iconBitmaps[1]);
         canvas.drawColor(primaryColor, PorterDuff.Mode.SRC_IN);
         iconBitmaps[2] = origin.copy(Bitmap.Config.ARGB_8888, true);
         canvas = new Canvas(iconBitmaps[2]);
-        canvas.drawColor(baseColor & 0x00ffffff | (Colors.isLight(baseColor) ? 0x4c000000 : 0x42000000),
-            PorterDuff.Mode.SRC_IN);
+        canvas.drawColor(baseColor & 0x00ffffff | (Colors.isLight(baseColor) ? 0x4c000000 : 0x42000000), PorterDuff.Mode.SRC_IN);
         iconBitmaps[3] = origin.copy(Bitmap.Config.ARGB_8888, true);
         canvas = new Canvas(iconBitmaps[3]);
         canvas.drawColor(errorColor, PorterDuff.Mode.SRC_IN);
@@ -843,11 +860,9 @@ public class MaterialEditText extends AppCompatEditText {
                 (getGravity() & Gravity.RIGHT) == Gravity.RIGHT || isRTL() ? Layout.Alignment.ALIGN_OPPOSITE
                     : (getGravity() & Gravity.LEFT) == Gravity.LEFT ? Layout.Alignment.ALIGN_NORMAL
                         : Layout.Alignment.ALIGN_CENTER;
-            textLayout = new StaticLayout(tempErrorText != null ? tempErrorText : helperText, textPaint, getWidth()
-                - getBottomTextLeftOffset()
-                - getBottomTextRightOffset()
-                - getPaddingLeft()
-                - getPaddingRight(), alignment, 1.0f, 0.0f, true);
+            textLayout = new StaticLayout(tempErrorText != null ? tempErrorText : helperText, textPaint,
+                getWidth() - getBottomTextLeftOffset() - getBottomTextRightOffset() - getPaddingLeft() - getPaddingRight(),
+                alignment, 1.0f, 0.0f, true);
             destBottomLines = Math.max(textLayout.getLineCount(), minBottomTextLines);
         } else {
             destBottomLines = minBottomLines;
@@ -979,9 +994,8 @@ public class MaterialEditText extends AppCompatEditText {
 
     private void resetTextColor() {
         if (textColorStateList == null) {
-            textColorStateList =
-                new ColorStateList(new int[][] { new int[] { android.R.attr.state_enabled }, EMPTY_STATE_SET },
-                    new int[] { baseColor & 0x00ffffff | 0xdf000000, baseColor & 0x00ffffff | 0x44000000 });
+            textColorStateList = new ColorStateList(new int[][] { new int[] { android.R.attr.state_enabled }, EMPTY_STATE_SET },
+                new int[] { baseColor & 0x00ffffff | 0xdf000000, baseColor & 0x00ffffff | 0x44000000 });
             setTextColor(textColorStateList);
         } else {
             setTextColor(textColorStateList);
@@ -1327,6 +1341,19 @@ public class MaterialEditText extends AppCompatEditText {
             canvas.drawBitmap(icon, iconRight, iconTop, paint);
         }
 
+        if (iconInnerRightBitmaps != null) {
+            int buttonLeft;
+            if (isRTL()) {
+                buttonLeft = startX;
+            } else {
+                buttonLeft = endX - iconOuterWidth;
+            }
+            Bitmap icon = iconInnerRightBitmaps[!isInternalValid() ? 3 : !isEnabled() ? 2 : hasFocus() ? 1 : 0];
+            buttonLeft += (iconOuterWidth - icon.getWidth()) / 2;
+            int iconTop = lineStartY + bottomSpacing - iconOuterHeight + (iconOuterHeight - icon.getHeight()) / 2;
+            canvas.drawBitmap(icon, buttonLeft, iconTop, paint);
+        }
+
         // draw the clear button
         if (hasFocus() && showClearButton && !TextUtils.isEmpty(getText()) && isEnabled()) {
             paint.setAlpha(255);
@@ -1338,8 +1365,7 @@ public class MaterialEditText extends AppCompatEditText {
             }
             Bitmap clearButtonBitmap = clearButtonBitmaps[0];
             buttonLeft += (iconOuterWidth - clearButtonBitmap.getWidth()) / 2;
-            int iconTop =
-                lineStartY + bottomSpacing - iconOuterHeight + (iconOuterHeight - clearButtonBitmap.getHeight()) / 2;
+            int iconTop = lineStartY + bottomSpacing - iconOuterHeight + (iconOuterHeight - clearButtonBitmap.getHeight()) / 2;
             canvas.drawBitmap(clearButtonBitmap, buttonLeft, iconTop, paint);
         }
 
@@ -1353,8 +1379,7 @@ public class MaterialEditText extends AppCompatEditText {
                 paint.setColor(underlineColor != -1 ? underlineColor : baseColor & 0x00ffffff | 0x44000000);
                 float interval = getPixel(1);
                 for (float xOffset = 0; xOffset < getWidth(); xOffset += interval * 3) {
-                    canvas.drawRect(startX + xOffset, lineStartY, startX + xOffset + interval, lineStartY + getPixel(1),
-                        paint);
+                    canvas.drawRect(startX + xOffset, lineStartY, startX + xOffset + interval, lineStartY + getPixel(1), paint);
                 }
             } else if (hasFocus()) { // focused
                 paint.setColor(primaryColor);
@@ -1374,8 +1399,7 @@ public class MaterialEditText extends AppCompatEditText {
         if ((hasFocus() && hasCharactersCounter()) || !isCharactersCountValid()) {
             textPaint.setColor(isCharactersCountValid() ? (baseColor & 0x00ffffff | 0x44000000) : errorColor);
             String charactersCounterText = getCharactersCounterText();
-            canvas.drawText(charactersCounterText,
-                isRTL() ? startX : endX - textPaint.measureText(charactersCounterText),
+            canvas.drawText(charactersCounterText, isRTL() ? startX : endX - textPaint.measureText(charactersCounterText),
                 lineStartY + bottomSpacing + relativeHeight, textPaint);
         }
 
@@ -1389,8 +1413,7 @@ public class MaterialEditText extends AppCompatEditText {
                 if (isRTL()) {
                     canvas.translate(endX - textLayout.getWidth(), lineStartY + bottomSpacing - bottomTextPadding);
                 } else {
-                    canvas.translate(startX + getBottomTextLeftOffset(),
-                        lineStartY + bottomSpacing - bottomTextPadding);
+                    canvas.translate(startX + getBottomTextLeftOffset(), lineStartY + bottomSpacing - bottomTextPadding);
                 }
                 textLayout.draw(canvas);
                 canvas.restore();
@@ -1402,8 +1425,7 @@ public class MaterialEditText extends AppCompatEditText {
             textPaint.setTextSize(floatingLabelTextSize);
             // calculate the text color
             textPaint.setColor((Integer) focusEvaluator.evaluate(focusFraction * (isEnabled() ? 1 : 0),
-                floatingLabelTextColor != -1 ? floatingLabelTextColor : (baseColor & 0x00ffffff | 0x44000000),
-                primaryColor));
+                floatingLabelTextColor != -1 ? floatingLabelTextColor : (baseColor & 0x00ffffff | 0x44000000), primaryColor));
 
             // calculate the horizontal position
             float floatingLabelWidth = textPaint.measureText(floatingLabelText.toString());
@@ -1420,14 +1442,13 @@ public class MaterialEditText extends AppCompatEditText {
             // calculate the vertical position
             int distance = floatingLabelPadding;
             int floatingLabelStartY =
-                (int) (innerPaddingTop + floatingLabelTextSize + floatingLabelPadding - distance * (
-                    floatingLabelAlwaysShown ? 1 : floatingLabelFraction) + getScrollY());
+                (int) (innerPaddingTop + floatingLabelTextSize + floatingLabelPadding - distance * (floatingLabelAlwaysShown ? 1
+                    : floatingLabelFraction) + getScrollY());
 
             // calculate the alpha
             int alpha =
-                ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * (0.3f * focusFraction * (
-                    isEnabled() ? 1 : 0) + 0.7f) * (floatingLabelTextColor != -1 ? 1
-                    : Color.alpha(floatingLabelTextColor) / 256f)));
+                ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * (0.3f * focusFraction * (isEnabled() ? 1
+                    : 0) + 0.7f) * (floatingLabelTextColor != -1 ? 1 : Color.alpha(floatingLabelTextColor) / 256f)));
             textPaint.setAlpha(alpha);
 
             // draw the floating label
@@ -1503,8 +1524,7 @@ public class MaterialEditText extends AppCompatEditText {
     private String getCharactersCounterText() {
         String text;
         if (minCharacters <= 0) {
-            text = isRTL() ? maxCharacters + " / " + checkLength(getText())
-                : checkLength(getText()) + " / " + maxCharacters;
+            text = isRTL() ? maxCharacters + " / " + checkLength(getText()) : checkLength(getText()) + " / " + maxCharacters;
         } else if (maxCharacters <= 0) {
             text = isRTL() ? "+" + minCharacters + " / " + checkLength(getText())
                 : checkLength(getText()) + " / " + minCharacters + "+";
@@ -1561,7 +1581,42 @@ public class MaterialEditText extends AppCompatEditText {
                     break;
             }
         }
+        if (hasFocus() && iconInnerRightBitmaps != null && isEnabled()) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    if (insideInnerRightButton(event)) {
+                        iconInnerRightClicking = true;
+                        return true;
+                    }
+                case MotionEvent.ACTION_MOVE:
+                    if (iconInnerRightClicking && !insideClearButton(event)) {
+                        iconInnerRightClicking = false;
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (iconInnerRightClicking) {
+                        if (mInnerRightIconClickListener != null) {
+                            mInnerRightIconClickListener.click();
+                        }
+                        iconInnerRightClicking = false;
+                    }
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                    iconInnerRightClicking = false;
+                    break;
+            }
+        }
         return super.onTouchEvent(event);
+    }
+
+    private InnerRightIconClickListener mInnerRightIconClickListener;
+
+    public void setInnerRightIconClickListener(InnerRightIconClickListener innerRightIconClickListener) {
+        mInnerRightIconClickListener = innerRightIconClickListener;
+    }
+
+    public interface InnerRightIconClickListener {
+        void click();
     }
 
     private boolean insideClearButton(MotionEvent event) {
@@ -1576,10 +1631,22 @@ public class MaterialEditText extends AppCompatEditText {
             buttonLeft = endX - iconOuterWidth;
         }
         int buttonTop = getScrollY() + getHeight() - getPaddingBottom() + bottomSpacing - iconOuterHeight;
-        return (x >= buttonLeft
-            && x < buttonLeft + iconOuterWidth
-            && y >= buttonTop
-            && y < buttonTop + iconOuterHeight);
+        return (x >= buttonLeft && x < buttonLeft + iconOuterWidth && y >= buttonTop && y < buttonTop + iconOuterHeight);
+    }
+
+    private boolean insideInnerRightButton(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+        int startX = getScrollX() + (iconLeftBitmaps == null ? 0 : (iconOuterWidth + iconPadding));
+        int endX = getScrollX() + (iconRightBitmaps == null ? getWidth() : getWidth() - iconOuterWidth - iconPadding);
+        int buttonLeft;
+        if (isRTL()) {
+            buttonLeft = startX;
+        } else {
+            buttonLeft = endX - iconOuterWidth;
+        }
+        int buttonTop = getScrollY() + getHeight() - getPaddingBottom() + bottomSpacing - iconOuterHeight;
+        return (x >= buttonLeft && x < buttonLeft + iconOuterWidth && y >= buttonTop && y < buttonTop + iconOuterHeight);
     }
 
     private int checkLength(CharSequence text) {

@@ -43,6 +43,8 @@
     <attr name="met_iconLeft" format="reference" />
     <!-- Right icon -->
     <attr name="met_iconRight" format="reference" />
+    <!-- Inner right icon -->
+    <attr name="met_innerIconRight" format="reference" />
     <!-- Padding between icon(s) and the main area. 8dp by default. -->
     <attr name="met_iconPadding" format="dimension" />
     <!-- Clear button -->
